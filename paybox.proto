@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package paybox;
+
+// =============================================================
+// 支付盒子通信协议定义
+// Protobuf + TLS/SSL + TCP
+// =============================================================
+
+// 版本号，可用于未来兼容判断
+option go_package = "github.com/wfunc/paynet/internal/pb;payboxpb";
+
+// ---------------------
+// 通用结果码
+// ---------------------
+enum ResultCode {
+  OK = 0;                 // 成功
+  FAILED = 1;             // 一般错误
+  UNAUTHORIZED = 2;       // 未认证
+  PARAM_ERROR = 3;        // 参数错误
+  DEVICE_NOT_FOUND = 4;   // 设备未注册
+  ORDER_DUPLICATED = 5;   // 重复订单
+}
+
+// ---------------------
+// 注册 / 登录
+// ---------------------
+
+message RegisterReq {
+  string device_sn = 1;      // 设备序列号
+  string model = 2;          // 设备型号
+  string firmware = 3;       // 固件版本
+  bytes  device_pubkey = 4;  // 设备公钥（如后续扩展签名认证）
+}
+
+message RegisterRsp {
+  ResultCode code = 1;       // 状态码
+  string msg = 2;            // 文字描述
+  string device_id = 3;      // 系统分配的设备ID
+}
+
+message LoginReq {
+  string device_id = 1;      // 已注册设备ID
+  string token = 2;          // 登录令牌（或使用证书）
+  string version = 3;        // 软件版本
+}
+
+message LoginRsp {
+  ResultCode code = 1;
+  string msg = 2;
+  string resume_token = 3;   // 可选，用于快速重连
+}
+
+// ---------------------
+// 心跳
+// ---------------------
+
+message Ping {
+  uint64 timestamp = 1;     // 当前时间戳（毫秒）
+  uint32 uptime = 2;        // 设备运行时长（秒）
+  int32  signal = 3;        // 网络信号强度
+  string ip = 4;            // 当前外网IP（可选）
+}
+
+message Pong {
+  uint64 timestamp = 1;
+}
+
+// ---------------------
+// 上币命令与反馈
+// ---------------------
+
+message CoinCommand {
+  string order_id = 1;      // 订单号，全局唯一
+  uint32 coins = 2;         // 上币数量
+  uint32 timeout = 3;       // 超时时间（秒）
+}
+
+enum CoinState {
+  COIN_ACCEPTED = 0;             // 已接收
+  COIN_RUNNING = 1;              // 执行中
+  COIN_DONE = 2;                 // 完成
+  COIN_FAILED = 3;               // 失败
+}
+
+message CoinAck {
+  string order_id = 1;      // 对应订单号
+  CoinState state = 2;      // 状态
+  uint32 progress = 3;      // 进度 (0~100)
+  string error = 4;         // 失败原因（可为空）
+}
+
+// ---------------------
+// 查询命令
+// ---------------------
+
+message QueryReq {
+  string order_id = 1;      // 查询订单
+}
+
+message QueryRsp {
+  string order_id = 1;
+  CoinState state = 2;
+  uint32 progress = 3;
+  string error = 4;
+}
+
+// ---------------------
+// 错误信息
+// ---------------------
+message ErrorMsg {
+  uint32 code = 1;          // 错误码
+  string msg = 2;           // 错误描述
+}

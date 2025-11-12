@@ -1,0 +1,30 @@
+# Build artifacts
+/bin/
+/build/
+/dist/
+/coverage/
+
+# Go modules
+/vendor/
+
+# Generated protobuf outputs (optional if regenerated elsewhere)
+*.pb.go
+
+# Editor / OS junk
+.DS_Store
+*.swp
+
+# TLS / security credentials
+/certs/*.key
+/certs/*.csr
+/certs/*.crt
+/certs/*.srl
+
+# Local configs
+*.local.yaml
+*.env
+
+paynetd.exe
+paynetd
+paynet
+paynet.exe
